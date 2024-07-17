@@ -70,9 +70,9 @@ void Print_CIM_Macro(const CIM_Macro *macro) {
     printf("WEIGHT_COL: %d\n", macro->WEIGHT_COL);
     printf("INPUT_WIDTH: %d\n", macro->INPUT_WIDTH);
     printf("RESULT_WIDTH: %d\n", macro->RESULT_WIDTH);
+    printf("\n");
 }
 
-// 打印 Micro_Arch 结构体内容的函数
 void Print_Micro_Arch(const Micro_Arch *arch) {
     printf("Micro_Arch:\n");
     printf("MACRO_ROW: %d\n", arch->MACRO_ROW);
@@ -101,4 +101,5 @@ void Print_Micro_Arch(const Micro_Arch *arch) {
     printf("FREQ: %d\n", arch->FREQ);
     printf("BUS_WIDTH: %d\n", arch->BUS_WIDTH);
     printf("PIPELINE_STAGES: %d\n", arch->PIPELINE_STAGES);
+    printf("\n");
 }
