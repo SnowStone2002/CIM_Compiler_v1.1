@@ -1,0 +1,31 @@
+CIM_Macro:
+  # element-wise basic info
+  AL: 64
+  PC: 32
+  SCR: 8
+  ICW: 128
+  WUW: 128
+  DIRECTION: 0 
+    # 0: AL share same direction with WL
+    # 1: AL share same direction with BL
+
+  # data mapping
+  DATA_TYPE: INT8
+  WEIGHT_WIDTH: 8
+  WEIGHT_ROW: 1
+  WEIGHT_COL: 8
+
+Micro_Arch:
+  # Macros
+  MACRO_ROW: 2
+  MACRO_COL: 2
+
+  # Cache
+  IS_DEPTH: 1024
+  OS_DEPTH: 1024
+
+  # others
+  FREQ: 500
+  BUS_WIDTH: 128
+  PIPELINE_STAGES: 8
+  
