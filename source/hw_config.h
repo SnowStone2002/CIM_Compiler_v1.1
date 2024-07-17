@@ -8,6 +8,8 @@ typedef struct {
     int WEIGHT_WIDTH;
     int WEIGHT_ROW;
     int WEIGHT_COL;
+    int INPUT_WIDTH;
+    int RESULT_WIDTH;
 } CIM_Macro;
 
 typedef struct {
@@ -17,6 +19,7 @@ typedef struct {
     int DIRECTION;
     int DATA_TYPE;
     int WEIGHT_WIDTH, WEIGHT_ROW, WEIGHT_COL;
+    int INPUT_WIDTH, RESULT_WIDTH;
     int CIM_WIDTH, CIM_DEPTH, CIM_SIZE;
 
     // Cache
@@ -30,7 +33,7 @@ typedef struct {
     int PIPELINE_STAGES;
 } Micro_Arch;
 
-void Init_CIM_Macro(CIM_Macro *macro, int AL, int PC, int SCR, int ICW, int WUW, int DIRECTION, int DATA_TYPE, int WEIGHT_WIDTH, int WEIGHT_ROW, int WEIGHT_COL);
+void Init_CIM_Macro(CIM_Macro *macro, int AL, int PC, int SCR, int ICW, int WUW, int DIRECTION, int DATA_TYPE, int WEIGHT_WIDTH, int WEIGHT_ROW, int WEIGHT_COL, int INPUT_WIDTH, int RESULT_WIDTH);
 void Init_Micro_Arch(Micro_Arch *arch, CIM_Macro *macro, int MACRO_ROW, int MACRO_COL, int IS_DEPTH, int OS_DEPTH, int FREQ, int BUS_WIDTH, int PIPELINE_STAGES);
 
 void Print_CIM_Macro(const CIM_Macro *CIM_Macro);
