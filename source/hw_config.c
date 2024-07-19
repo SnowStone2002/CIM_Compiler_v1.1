@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
-void Init_CIM_Macro(CIM_Macro *macro, int AL, int PC, int SCR, int ICW, int WUW, int DIRECTION, int DATA_TYPE, int WEIGHT_WIDTH, int WEIGHT_ROW, int WEIGHT_COL, int INPUT_WIDTH, int RESULT_WIDTH) {
+void Init_CIM_Macro(CIM_Macro *macro, int AL, int PC, int SCR, int ICW, int WUW, int WEIGHT_COL, int INPUT_WIDTH, int RESULT_WIDTH, int DIRECTION, int DATA_TYPE, int WEIGHT_WIDTH, int WEIGHT_ROW) {
     macro->AL = AL;
     macro->PC = PC;
     macro->SCR = SCR;
@@ -63,13 +63,14 @@ void Print_CIM_Macro(const CIM_Macro *macro) {
     printf("SCR: %d\n", macro->SCR);
     printf("ICW: %d\n", macro->ICW);
     printf("WUW: %d\n", macro->WUW);
+    printf("WEIGHT_COL: %d\n", macro->WEIGHT_COL);
+    printf("INPUT_WIDTH: %d\n", macro->INPUT_WIDTH);
+    printf("RESULT_WIDTH: %d\n", macro->RESULT_WIDTH);
+
     printf("DIRECTION: %d\n", macro->DIRECTION);
     printf("DATA_TYPE: %d\n", macro->DATA_TYPE);
     printf("WEIGHT_WIDTH: %d\n", macro->WEIGHT_WIDTH);
     printf("WEIGHT_ROW: %d\n", macro->WEIGHT_ROW);
-    printf("WEIGHT_COL: %d\n", macro->WEIGHT_COL);
-    printf("INPUT_WIDTH: %d\n", macro->INPUT_WIDTH);
-    printf("RESULT_WIDTH: %d\n", macro->RESULT_WIDTH);
     printf("\n");
 }
 

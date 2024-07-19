@@ -2,14 +2,16 @@
 #define HW_CONFIG_H
 
 typedef struct {
+//necessary
     int AL, PC, SCR, ICW, WUW;
-    int DIRECTION;
-    int DATA_TYPE;
     int WEIGHT_WIDTH;
-    int WEIGHT_ROW;
-    int WEIGHT_COL;
     int INPUT_WIDTH;
     int RESULT_WIDTH;
+//optional
+    int DIRECTION;
+    int DATA_TYPE;
+    int WEIGHT_ROW;
+    int WEIGHT_COL;
 } CIM_Macro;
 
 typedef struct {
