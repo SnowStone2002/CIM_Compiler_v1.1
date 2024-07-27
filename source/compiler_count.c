@@ -45,6 +45,7 @@ int weight_block_col, weight_block_row, weight_block_num, weight_update_times_pe
 int input_data_per_row, rows_per_input_channel, input_channels_per_ISload, IS_load_times_per_inst;
 int para_times, acc_times;
 int is_addr_record = 114514; //随便给了个不可能的初值input_map_position
+int input_map_position_record = 114514;
 int bus_is_width_ratio;
 int bus_wu_width_ratio;
 
@@ -301,5 +302,217 @@ int wu_ls_bank(int num_ls, int num_channel, int i_block){
         return wu_ls_narrow_bus(num_ls, num_channel, i_block);
     } else {
         return wu_ls_wide_bus(num_ls, num_channel, i_block);
+    }
+}
+
+void compute(int i_input_channel, int computing_block,int fussion_flag) {
+    int i_ls = computing_block % arch.SCR;
+    int i_pt, i_at, is_addr, os_addr, input_map_position, j_reg;
+    
+    if (strcmp(data_stream, "isap") == 0 || strcmp(data_stream, "wsap") == 0) {
+        i_pt = computing_block / weight_block_col;
+        i_at = computing_block % weight_block_col;
+    } else if (strcmp(data_stream, "ispp") == 0 || strcmp(data_stream, "wspp") == 0) {
+        i_pt = computing_block % weight_block_row;
+        i_at = computing_block / weight_block_row;
+    }
+    
+    int atos_flag = atos_matrix[i_pt][i_at];
+
+    os_addr = i_input_channel * para_times + i_pt;
+    // if (fussion_flag) os_addr = i_input_channel * Spv + (i_pt - Sqk) % Spv + ;
+
+    if (strcmp(data_stream, "isap") == 0 || strcmp(data_stream, "ispp") == 0) {
+        is_addr = (i_input_channel % input_channels_per_ISload) * rows_per_input_channel + i_at;
+    } else if (strcmp(data_stream, "wsap") == 0 || strcmp(data_stream, "wspp") == 0) {
+        is_addr = i_input_channel * rows_per_input_channel + i_at;
+    }
+
+    if ((strcmp(data_stream, "wsap") == 0 || strcmp(data_stream, "wspp") == 0) && (i_input_channel >= input_channels_per_ISload)) { // Cmpfgt & Cmpfgtp
+    //  这里是bus wide的情况
+        if (bus_is_width_ratio >= 1){
+            input_map_position = i_input_channel * input_map_length + i_at * arch.AL;
+            if(input_map_position / bus_is_width_ratio == input_map_position_record / bus_is_width_ratio && !fussion_flag) instructionCount.L2_reward++;
+            input_map_position_record = input_map_position;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            if (atos_flag == 2) {
+                if (os_addr >= os_virtual_depth) { // aos, os overflow
+                    if (i_at == acc_times - 1) {
+                        os_virtual_depth += 1;
+                    }
+                    instructionCount.Cmpfgt_paos++;
+                    instructionCount.Lpenalty+=ceil((float)arch.OS_WIDTH / (arch.RESULT_WIDTH / arch.INPUT_WIDTH) / arch.BUS_WIDTH);
+                } else { // aos, os not overflow
+                    if (i_at == acc_times - 1) {
+                        os_virtual_depth += 1;
+                        instructionCount.Cmpfgt_paos++;
+                    }
+                    else {
+                        instructionCount.Cmpfgt_aos++;
+                    }
+                    instructionCount.Nop_w_rd++;
+                }
+                // Additional conditions and corresponding fprintf statements should be added here as per the Python logic
+            }
+            
+            if (atos_flag == 1){
+                if (os_addr >= os_virtual_depth){    // tos, os overflow
+                    if (i_at == acc_times-1)    // complete one output, gen rd request, aos: paos(go through)
+                        os_virtual_depth += 1;
+                    instructionCount.Cmpfgt_ptos++;
+                }
+                else{    // tos, os not overflow
+                    if (i_at == acc_times-1){ //gen rd request
+                        os_virtual_depth += 1;
+                        instructionCount.Cmpfgt_ptos++;
+                    }
+                    else{
+                        instructionCount.Cmpfgt_tos++;
+                    }
+                }
+            }
+
+            if (atos_flag == 0){
+                instructionCount.Cmpfgt_aor++;
+            }
+            ////////////////////////////////////////////////////////////////////////
+
+
+            return;
+        }
+
+    //  这里是bus narrow的情况
+        input_map_position = i_input_channel * input_map_length + i_at * arch.AL + (arch.BUS_WIDTH / arch.INPUT_WIDTH) * (arch.IS_WIDTH / arch.BUS_WIDTH - 1);
+        
+        // if (is_addr == is_addr_record && !fussion_flag) instructionCount.L2_reward++;
+        // is_addr_record = is_addr;
+
+        for (j_reg = arch.IS_WIDTH / arch.BUS_WIDTH - 1; j_reg >= 0; j_reg--) {
+            
+            if ((gt_in_map_record / (arch.IS_WIDTH / arch.IS_WIDTH)) == (input_map_position / (arch.IS_WIDTH / arch.IS_WIDTH)) && (i_ls != 0) && j_reg != 0) {
+                // 当前位置跟上次算的位置一样 && 不是第一组(第一组需要数据进来) && 不是最后一个（最后一个需要计算）
+                input_map_position -= arch.BUS_WIDTH / arch.INPUT_WIDTH;
+                continue;
+            }
+
+            if (j_reg != 0) {   // Cmpfgtp
+                instructionCount.Cmpfgtp++;
+                input_map_position_record = input_map_position;///???
+                input_map_position -= arch.BUS_WIDTH / arch.INPUT_WIDTH;
+            } else {            // Cmpfgt
+                if (input_map_position == input_map_position_record && !fussion_flag) instructionCount.L2_reward++;
+                input_map_position_record = input_map_position;///???
+                if (atos_flag == 2) {
+                    if (os_addr >= os_virtual_depth) { // aos, os overflow
+                        if (i_at == acc_times - 1) {
+                            os_virtual_depth += 1;
+                        }
+                        instructionCount.Cmpfgt_paos++;
+                        instructionCount.Lpenalty+=ceil((float)acc0.OutputSRAMWidth / (config.RESULT_WIDTH / config.DATA_WIDTH) / config.BUS_WIDTH);
+                    } else { // aos, os not overflow
+                        if (i_at == acc_times - 1) {
+                            os_virtual_depth += 1;
+                            instructionCount.Cmpfgt_paos++;
+                            if (fussion_flag){
+                                instructionCount.Fussion++;
+                                return;
+                            }
+                        }
+                        else {
+                            instructionCount.Cmpfgt_aos++;
+                            if (fussion_flag){
+                                instructionCount.Fussion++;
+                                return;
+                            }
+                        }
+                        instructionCount.Nop_w_rd++;
+                    }
+                    // Additional conditions and corresponding fprintf statements should be added here as per the Python logic
+                }
+                
+                if (atos_flag == 1){
+                    if (os_addr >= os_virtual_depth){    // tos, os overflow
+                        if (i_at == acc_times-1)    // complete one output, gen rd request, aos: paos(go through)
+                            os_virtual_depth += 1;
+                        instructionCount.Cmpfgt_ptos++;
+                        if (fussion_flag){
+                            instructionCount.Fussion++;
+                            return;
+                        }
+                    }
+                    else{    // tos, os not overflow
+                        if (i_at == acc_times-1){ //gen rd request
+                            os_virtual_depth += 1;
+                            instructionCount.Cmpfgt_ptos++;
+                            if (fussion_flag){
+                                instructionCount.Fussion++;
+                                return;
+                            }
+                        }
+                        else{
+                            instructionCount.Cmpfgt_tos++;
+                            if (fussion_flag){
+                                instructionCount.Fussion++;
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                if (atos_flag == 0){
+                    instructionCount.Cmpfgt_aor++;
+                    if (fussion_flag){
+                        instructionCount.Fussion++;
+                        return;
+                    }
+                }
+            }
+        }
+        gt_in_map_record = input_map_position;
+    }
+
+    else{   // Cmpfis
+        if (is_addr == is_addr_record) instructionCount.IS_reward++;
+            is_addr_record = is_addr;
+
+        if (atos_flag == 2) { //aos
+            if (os_addr >= os_virtual_depth) {   // aos, os overflow
+                if (i_at == acc_times-1) {
+                    os_virtual_depth += 1;
+                }
+                instructionCount.Cmpfis_paos++;
+                instructionCount.Lpenalty+=ceil((float)arch.OS_WIDTH / (arch.RESULT_WIDTH / arch.INPUT_WIDTH) / arch.BUS_WIDTH);
+            } else {                             // aos, os not overflow
+                if (i_at == acc_times - 1) {
+                    os_virtual_depth += 1;
+                    instructionCount.Cmpfis_paos++;
+                }
+                else {
+                    instructionCount.Cmpfis_aos++;
+                }
+                instructionCount.Nop_w_rd++;
+            }
+        }
+
+        if (atos_flag == 1){
+            if (os_addr >= os_virtual_depth){    // tos, os overflow
+                if (i_at == acc_times-1)    // complete one output, gen rd request, aos: paos(go through)
+                    os_virtual_depth += 1;
+                instructionCount.Cmpfis_ptos++;
+            }
+            else{    // tos, os not overflow
+                if (i_at == acc_times-1){ //gen rd request
+                    os_virtual_depth += 1;
+                    instructionCount.Cmpfis_ptos++;
+                }
+                else{
+                    instructionCount.Cmpfis_tos++;
+                }
+            }
+        }
+
+        if (atos_flag == 0){
+            instructionCount.Cmpfis_aor++;
+        }
     }
 }
