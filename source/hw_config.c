@@ -25,6 +25,7 @@ void Init_Micro_Arch(Micro_Arch *arch, CIM_Macro *macro, int MACRO_ROW, int MACR
     arch->SCR = macro->SCR;
     arch->ICW = MACRO_COL * macro->ICW;
     arch->WUW = MACRO_COL * macro->WUW;
+
     arch->DIRECTION = macro->DIRECTION;
     arch->DATA_TYPE = macro->DATA_TYPE;
     arch->WEIGHT_WIDTH = macro->WEIGHT_WIDTH;
@@ -37,8 +38,8 @@ void Init_Micro_Arch(Micro_Arch *arch, CIM_Macro *macro, int MACRO_ROW, int MACR
         arch->CIM_DEPTH = macro->WEIGHT_ROW * macro->SCR * arch->PC;
     }
     else {
-        arch->CIM_DEPTH = macro->WEIGHT_COL * arch->AL;
-        arch->CIM_WIDTH = macro->WEIGHT_ROW * macro->SCR * arch->PC;
+        arch->CIM_DEPTH = macro->WEIGHT_COL * arch->AL * macro->SCR;
+        arch->CIM_WIDTH = macro->WEIGHT_ROW * arch->PC;
     }
     arch->CIM_SIZE = arch->CIM_WIDTH * arch->CIM_DEPTH;
 
