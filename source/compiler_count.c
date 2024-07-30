@@ -58,9 +58,6 @@ int* weight_update_ls;
 int** ls_matrix;
 int** atos_matrix;
 
-char item[100];
-
-void log_init(void);
 void idle(void);
 void load_is_narrow_bus(int num_rows);
 void load_is_wide_bus(int num_rows);
@@ -77,79 +74,73 @@ void lhd_process(void);
 void a2a_process(void);
 
 int main(int argc, char *argv[]) {
-    if (argc != 24) {
+    if (argc != 25) {
         printf("error!");
         return 1;
     }
 
-    AL = atoi(argv[1]);
-    PC = atoi(argv[2]);
-    SCR = atoi(argv[3]);
-    ICW = atoi(argv[4]);
-    WUW = atoi(argv[5]);
+    // Parsing command line arguments
+    int AL = atoi(argv[1]);
+    int PC = atoi(argv[2]);
+    int SCR = atoi(argv[3]);
+    int ICW = atoi(argv[4]);
+    int WUW = atoi(argv[5]);
 
-    MACRO_ROW = atoi(argv[6]);
-    MACRO_COL = atoi(argv[7]);
-    IS_DEPTH = atoi(argv[8]);
-    OS_DEPTH = atoi(argv[9]);
-    FREQ = atoi(argv[10]);
-    BUS_WIDTH = atoi(argv[11]);
-    PIPELINE_STAGES = atoi(argv[12]);
+    int MACRO_ROW = atoi(argv[6]);
+    int MACRO_COL = atoi(argv[7]);
+    int IS_DEPTH = atoi(argv[8]);
+    int OS_DEPTH = atoi(argv[9]);
+    int FREQ = atoi(argv[10]);
+    int BUS_WIDTH = atoi(argv[11]);
+    int PIPELINE_STAGES = atoi(argv[12]);
 
-    DIRECTION = atoi(argv[13]);
-    DATA_TYPE = atoi(argv[14]);
-    WEIGHT_WIDTH = atoi(argv[15]);
-    WEIGHT_ROW = atoi(argv[16]);
-    WEIGHT_COL = atoi(argv[17]);
-    INPUT_WIDTH = atoi(argv[18]);
-    RESULT_WIDTH = atoi(argv[19]);
+    int DIRECTION = atoi(argv[13]);
+    int DATA_TYPE = atoi(argv[14]);
+    int WEIGHT_WIDTH = atoi(argv[15]);
+    int WEIGHT_ROW = atoi(argv[16]);
+    int WEIGHT_COL = atoi(argv[17]);
+    int INPUT_WIDTH = atoi(argv[18]);
+    int RESULT_WIDTH = atoi(argv[19]);
 
-    operation = argv[20];
-    dim1 = atoi(argv[21]);
-    dim2 = atoi(argv[22]);
-    dim3 = atoi(argv[23]);
-    data_stream = argv[24];
+    char* operation = argv[20];
+    int dim1 = atoi(argv[21]);
+    int dim2 = atoi(argv[22]);
+    int dim3 = atoi(argv[23]);
+    char* data_stream = argv[24];
 
-
-    // 调用初始化函数
+    // Call initialization functions
     Init_CIM_Macro(&macro, AL, PC, SCR, ICW, WUW, DIRECTION, DATA_TYPE, WEIGHT_WIDTH, WEIGHT_ROW, WEIGHT_COL, INPUT_WIDTH, RESULT_WIDTH);
     Init_Micro_Arch(&arch, &macro, MACRO_ROW, MACRO_COL, IS_DEPTH, OS_DEPTH, FREQ, BUS_WIDTH, PIPELINE_STAGES);
-
-    // // 打印初始化后的值进行验证
     // Print_CIM_Macro(&macro);
     // Print_Micro_Arch(&arch);
 
-    log_init();
-
+    //***************************************** main process ****************************************
     if (strcmp(operation, "proj") == 0)
-        proj_process(dim1,dim2,dim3);
+        proj_process(dim1, dim2, dim3);
     else if (strcmp(operation, "a2a") == 0)
-            a2a_process();
+        a2a_process();
 
-    // #region output
     //***************************************** terminal output ****************************************
     printInstructionCount(&instructionCount);
 
-    // printf("%s", data_stream);
-
     //******************************************* csv output *******************************************
-    // 检查文件是否存在
+    // Check if file exists
     FILE *file = fopen("count.csv", "r");
     int needHeader = 0;
     if (file == NULL) {
-        needHeader = 1; // 文件不存在，需要写入表头
+        needHeader = 1; // File does not exist, need to write header
     } else {
-        fclose(file); // 文件已存在，关闭文件
+        fclose(file); // File exists, close file
     }
 
-    // 以追加模式打开文件，如果不存在则创建
+    // Open file in append mode, create if it doesn't exist
     file = fopen("count.csv", "a");
     if (file == NULL) {
         perror("Failed to open csv file\n");
         return EXIT_FAILURE;
     }
 
-    // 如果需要，写入表头
+    // Write header if needed
     if (needHeader) {
         fprintf(file, "al,pc,scr,icw,wuw,macro_row,macro_col,is_depth,os_depth,freq,bus_width,pipeline_stages,operation,dim1,dim2,dim3,data_stream,\n");
         fprintf(file, "Lin,Linp,Lwt,Lwtp,Cmpfis_aor,Cmpfis_tos,Cmpfis_aos,Cmpfis_ptos,Cmpfis_paos,");
@@ -157,12 +148,12 @@ int main(int argc, char *argv[]) {
         fprintf(file, "IS_reward,L2_reward,Fussion\n");
     }
 
-    // 写入命令行参数到文件
+    // Write command line arguments to file
     fprintf(file, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%d,%d,%d,%s\n",
             AL, PC, SCR, ICW, WUW, MACRO_ROW, MACRO_COL, IS_DEPTH, OS_DEPTH, FREQ, BUS_WIDTH, PIPELINE_STAGES,
             operation, dim1, dim2, dim3, data_stream);
 
-    // 写入InstructionCount到文件
+    // Write InstructionCount to file
     fprintf(file, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
             instructionCount.Lin, instructionCount.Linp, instructionCount.Lwt, instructionCount.Lwtp,
             instructionCount.Cmpfis_aor, instructionCount.Cmpfis_tos, instructionCount.Cmpfis_aos,
@@ -170,14 +161,13 @@ int main(int argc, char *argv[]) {
             instructionCount.Cmpfgt_aor, instructionCount.Cmpfgt_tos, instructionCount.Cmpfgt_aos,
             instructionCount.Cmpfgt_ptos, instructionCount.Cmpfgt_paos,
             instructionCount.Cmpfgtp, instructionCount.Lpenalty, instructionCount.Nop, instructionCount.Nop_w_rd, 
-            instructionCount.IS_reward,instructionCount.L2_reward,instructionCount.Fussion);
+            instructionCount.IS_reward, instructionCount.L2_reward, instructionCount.Fussion);
 
-    // 关闭文件
+    // Close file
     fclose(file);
 
-
-    // //*******************************************清理*******************************************
-    for(int i = 0; i < para_times; ++i) {
+    //******************************************* clear *******************************************
+    for (int i = 0; i < para_times; ++i) {
         free(ls_matrix[i]);
         free(atos_matrix[i]);
     }
@@ -186,37 +176,14 @@ int main(int argc, char *argv[]) {
     free(weight_update_ls);
     free(IS_load_rows);
 
-
     return 0;
-}
-
-void log_init() {
-    // Log initialization logic here
-    char filepath[256];
-    sprintf(filepath, "./build/inst.txt");
-
-    if (access(filepath, F_OK) != -1) {
-        // file exists
-        if (remove(filepath) == 0) {
-            //printf("Deleted successfully\n");
-        } else {
-            //printf("Unable to delete the file\n");
-        }
-    } else {
-        // file doesn't exist
-        // printf("File doesn't exist\n");
-        FILE *file = fopen(filepath, "w");
-        if (file != NULL) {
-            fclose(file);
-        }
-    }
 }
 
 void idle(){
     instructionCount.Nop++; 
 }
 
-void load_is_block(int num_rows){
+void load_is_block(int num_rows){// num_rows is for the IS
     bus_is_width_ratio = arch.BUS_WIDTH / arch.IS_WIDTH;
     if (bus_is_width_ratio == 0) {
         load_is_narrow_bus(num_rows);
@@ -246,19 +213,20 @@ void load_is_wide_bus(int num_rows) {
     }
 }
 
+int wu_ls_bank(int num_ls, int num_channel, int i_block){
+    bus_wu_width_ratio = arch.BUS_WIDTH / arch.WUW;
+    if (bus_wu_width_ratio == 0) {
+        return wu_ls_narrow_bus(num_ls, num_channel, i_block);
+    } else {
+        return wu_ls_wide_bus(num_ls, num_channel, i_block);
+    }
+}
+
 int wu_ls_narrow_bus(int num_ls, int num_channel, int i_block) {
     for (int i_ls = 0; i_ls < num_ls; ++i_ls) {
-        int i_pt, i_at;
-        if (strcmp(data_stream, "isap") == 0 || strcmp(data_stream, "wsap") == 0) {
-            i_pt = i_block / weight_block_col;
-            i_at = i_block % weight_block_col;
-        } else if (strcmp(data_stream, "ispp") == 0 || strcmp(data_stream, "wspp") == 0) {
-            i_pt = i_block % weight_block_row;
-            i_at = i_block / weight_block_row;
-        }
         for (int j_channel = 0; j_channel < num_channel; j_channel++) {        
-            for (int k_reg = arch.CIM_WIDTH / arch.BUS_WIDTH * config.WEIGHT_ROW - 1; k_reg >= 0; k_reg--) {
-                int row_reg = (arch.CIM_WIDTH / arch.BUS_WIDTH * config.WEIGHT_ROW - 1 - k_reg) / (acc0.CIMsWriteWidth / acc0.BusWidth);
+            for (int k_reg = arch.CIM_WIDTH / arch.BUS_WIDTH * arch.WEIGHT_ROW - 1; k_reg >= 0; k_reg--) {
+                //int row_reg = (arch.CIM_WIDTH / arch.BUS_WIDTH * arch.WEIGHT_ROW - 1 - k_reg) / (arch.WUW / arch.BUS_WIDTH);
                 int pause_reg = k_reg % (arch.CIM_WIDTH / arch.BUS_WIDTH);
 
                 if (pause_reg == 0) {
@@ -275,14 +243,6 @@ int wu_ls_narrow_bus(int num_ls, int num_channel, int i_block) {
 
 int wu_ls_wide_bus(int num_ls, int num_channel, int i_block) {
     for (int i_ls = 0; i_ls < num_ls; ++i_ls) {
-        int i_pt, i_at;
-        if (strcmp(data_stream, "isap") == 0 || strcmp(data_stream, "wsap") == 0) {
-            i_pt = i_block / weight_block_col;
-            i_at = i_block % weight_block_col;
-        } else if (strcmp(data_stream, "ispp") == 0 || strcmp(data_stream, "wspp") == 0) {
-            i_pt = i_block % weight_block_row;
-            i_at = i_block / weight_block_row;
-        }
         for (int j_channel = 0; j_channel < num_channel; j_channel++) {
             for (int k_reg = arch.WEIGHT_ROW - 1; k_reg >= 0; k_reg--) {
                 instructionCount.Lwt++;
@@ -294,15 +254,6 @@ int wu_ls_wide_bus(int num_ls, int num_channel, int i_block) {
         i_block += 1;
     }
     return i_block;
-}
-
-int wu_ls_bank(int num_ls, int num_channel, int i_block){
-    bus_wu_width_ratio = arch.BUS_WIDTH / arch.CIMsWriteWidth;
-    if (bus_wu_width_ratio == 0) {
-        return wu_ls_narrow_bus(num_ls, num_channel, i_block);
-    } else {
-        return wu_ls_wide_bus(num_ls, num_channel, i_block);
-    }
 }
 
 void compute(int i_input_channel, int computing_block,int fussion_flag) {
@@ -389,7 +340,7 @@ void compute(int i_input_channel, int computing_block,int fussion_flag) {
 
         for (j_reg = arch.IS_WIDTH / arch.BUS_WIDTH - 1; j_reg >= 0; j_reg--) {
             
-            if ((gt_in_map_record / (arch.IS_WIDTH / arch.IS_WIDTH)) == (input_map_position / (arch.IS_WIDTH / arch.IS_WIDTH)) && (i_ls != 0) && j_reg != 0) {
+            if ((gt_in_map_record / (arch.IS_WIDTH / arch.INPUT_WIDTH)) == (input_map_position / (arch.IS_WIDTH / arch.INPUT_WIDTH)) && (i_ls != 0) && j_reg != 0) {
                 // 当前位置跟上次算的位置一样 && 不是第一组(第一组需要数据进来) && 不是最后一个（最后一个需要计算）
                 input_map_position -= arch.BUS_WIDTH / arch.INPUT_WIDTH;
                 continue;
@@ -408,7 +359,7 @@ void compute(int i_input_channel, int computing_block,int fussion_flag) {
                             os_virtual_depth += 1;
                         }
                         instructionCount.Cmpfgt_paos++;
-                        instructionCount.Lpenalty+=ceil((float)acc0.OutputSRAMWidth / (config.RESULT_WIDTH / config.DATA_WIDTH) / config.BUS_WIDTH);
+                        instructionCount.Lpenalty+=ceil((float)arch.OS_WIDTH / (arch.RESULT_WIDTH / arch.INPUT_WIDTH) / arch.BUS_WIDTH);
                     } else { // aos, os not overflow
                         if (i_at == acc_times - 1) {
                             os_virtual_depth += 1;
@@ -516,3 +467,398 @@ void compute(int i_input_channel, int computing_block,int fussion_flag) {
         }
     }
 }
+
+void is_process(void) {
+    int i_block = 0;
+
+    if (IS_load_times_per_inst == 0){
+        if (strcmp(data_stream, "isap") == 0)   strcpy(data_stream, "wsap");
+        if (strcmp(data_stream, "ispp") == 0)   strcpy(data_stream, "wspp");
+
+        for(int i = 0; i < para_times; ++i) {
+            free(ls_matrix[i]);
+            free(atos_matrix[i]);
+        }
+        free(ls_matrix);
+        free(atos_matrix);
+        free(weight_update_ls);
+        free(IS_load_rows);
+
+        proj_process(dim1,dim2,dim3);
+
+        return;
+    }
+
+    for (int i_IS_load = 0; i_IS_load < IS_load_times_per_inst; i_IS_load++) {
+        load_is_block(IS_load_rows[i_IS_load]);
+
+        i_block = 0;
+        for (int j_weight_load = 0; j_weight_load < weight_update_times_per_inst; j_weight_load++) {
+            //i_block = 
+            wu_ls_bank(weight_update_ls[j_weight_load], arch.PC, i_block);
+
+            for (int i = 0; i < arch.WUW / arch.BUS_WIDTH * arch.WEIGHT_ROW; i++) {
+                idle();
+            }
+
+            for (int i_input_channel = i_IS_load * input_channels_per_ISload; 
+                 i_input_channel < i_IS_load * input_channels_per_ISload + 
+                 IS_load_rows[i_IS_load] / rows_per_input_channel; 
+                 i_input_channel++) {
+
+                for (int j_ls = 0; j_ls < weight_update_ls[j_weight_load]; j_ls++) {
+                    int j_compute_block = i_block + j_ls;
+                    compute(i_input_channel, j_compute_block, 0);
+                }
+            }
+
+            i_block += weight_update_ls[j_weight_load];
+        }
+    }
+}
+
+void ws_process(void) {
+    int i_block = 0;
+
+    // 假设rows_per_input_channel和input_channels_per_ISload已经定义
+    load_is_block(rows_per_input_channel * input_channels_per_ISload);
+
+    for (int i_weight_update = 0; i_weight_update < weight_update_times_per_inst; i_weight_update++) {
+        wu_ls_bank(weight_update_ls[i_weight_update], arch.PC, i_block);
+
+        for (int i = 0; i < arch.WUW / arch.BUS_WIDTH * arch.WEIGHT_ROW; i++) {
+            idle();
+        }
+
+        for (int i_input_channel = 0; i_input_channel < input_map_channel; i_input_channel++) {
+            for (int j_ls = 0; j_ls < weight_update_ls[i_weight_update]; j_ls++) {
+                int j_compute_block = i_block + j_ls;
+                compute(i_input_channel, j_compute_block, 0);
+            }
+        }
+
+        i_block += weight_update_ls[i_weight_update];
+    }
+}
+
+void proj_process(int a, int b, int c){ //实际上的输入参数是input和weight map的长宽
+    weight_map_channel = a;
+    weight_map_length = b;
+
+    input_map_length = b;
+    input_map_channel = c;
+
+    input_data_per_row = floor(arch.IS_WIDTH / arch.INPUT_WIDTH);
+    rows_per_input_channel = (int)ceil((float)input_map_length / input_data_per_row);
+    input_channels_per_ISload = arch.IS_DEPTH / rows_per_input_channel;
+    if (input_channels_per_ISload > input_map_channel)
+        input_channels_per_ISload = input_map_channel;
+    if (input_channels_per_ISload == 0)
+        IS_load_times_per_inst = 0;
+    else{
+        IS_load_times_per_inst = (int)ceil((float)input_map_channel / input_channels_per_ISload);
+        IS_load_rows = (int*)malloc(IS_load_times_per_inst * sizeof(int));
+        for (int i = 0; i < IS_load_times_per_inst; ++i) {
+            IS_load_rows[i] = input_channels_per_ISload * rows_per_input_channel;
+        }
+        if (input_map_channel % input_channels_per_ISload != 0) {
+            IS_load_rows[IS_load_times_per_inst - 1] = (input_map_channel % input_channels_per_ISload) * rows_per_input_channel;
+        }
+    }
+
+    // IS_load_rows = (int*)malloc(IS_load_times_per_inst * sizeof(int));
+    // for (int i = 0; i < IS_load_times_per_inst; ++i) {
+    //     IS_load_rows[i] = input_channels_per_ISload * rows_per_input_channel;
+    // }
+    // if (input_map_channel % input_channels_per_ISload != 0) {
+    //     IS_load_rows[IS_load_times_per_inst - 1] = (input_map_channel % input_channels_per_ISload) * rows_per_input_channel;
+    // }
+
+    weight_block_row = (int)ceil((float)weight_map_channel / arch.PC);
+    weight_block_col = (int)ceil((float)weight_map_length / arch.AL);
+    weight_block_num = weight_block_col * weight_block_row;
+    weight_update_times_per_inst = (int)ceil((float)weight_block_num / arch.SCR);
+
+    weight_update_ls = (int*)malloc(weight_update_times_per_inst * sizeof(int));
+    for (int i = 0; i < weight_update_times_per_inst; ++i) {
+        weight_update_ls[i] = arch.SCR;
+    }
+    if (weight_block_num % arch.SCR != 0) {
+        weight_update_ls[weight_update_times_per_inst - 1] = weight_block_num % arch.SCR;
+    }
+
+    para_times = weight_block_row;
+    acc_times = weight_block_col;
+
+    weight_map_channel = para_times * arch.PC;
+    weight_map_length = acc_times * arch.AL;
+
+    input_map_length  = acc_times * arch.AL;
+    input_map_channel = input_map_channel;
+
+    // 分配ls_matrix并初始化为0
+    ls_matrix = (int**)malloc(para_times * sizeof(int*));
+    for(int i = 0; i < para_times; ++i) {
+        ls_matrix[i] = (int*)malloc(acc_times * sizeof(int));
+        for(int j = 0; j < acc_times; ++j) {
+            ls_matrix[i][j] = 0;
+        }
+    }
+
+    // 分配atos_matrix并初始化为0
+    atos_matrix = (int**)malloc(para_times * sizeof(int*));
+    for(int i = 0; i < para_times; ++i) {
+        atos_matrix[i] = (int*)malloc(acc_times * sizeof(int));
+        for(int j = 0; j < acc_times; ++j) {
+            atos_matrix[i][j] = 0;
+        }
+    }
+
+    int ls_fg = 0;
+
+    if (strcmp(data_stream, "isap") == 0 || strcmp(data_stream, "wsap") == 0) {
+        // ap 优先acc
+        for (int i_pt = 0; i_pt < para_times; ++i_pt) {
+            for (int i_at = 0; i_at < acc_times; ++i_at) {
+                ls_matrix[i_pt][i_at] = ls_fg;
+                ls_fg = (ls_fg + 1) % arch.SCR;
+            }
+        }
+        
+        for (int i_pt = 0; i_pt < para_times; ++i_pt) {
+            int row_st_fg = 0; // row start flag
+            for (int i_at = 0; i_at < acc_times; ++i_at) {    
+                if (i_at == acc_times-1 || ls_matrix[i_pt][i_at] == arch.SCR - 1) {
+                    atos_matrix[i_pt][i_at] = row_st_fg == 0 ? 1 : 2; // 1 for TOS, 2 for AOS
+                    row_st_fg = 1;
+                }
+            }
+        }
+    } else if (strcmp(data_stream, "ispp") == 0 || strcmp(data_stream, "wspp") == 0) {
+        // pp 优先para
+        for (int i_at = 0; i_at < acc_times; ++i_at) {
+            for (int i_pt = 0; i_pt < para_times; ++i_pt) {
+                ls_matrix[i_pt][i_at] = ls_fg;
+                ls_fg = (ls_fg + 1) % arch.SCR;
+            }
+        }
+
+        for (int i_pt = 0; i_pt < para_times; ++i_pt) {
+            for (int i_at = 0; i_at < acc_times; ++i_at) {    
+                atos_matrix[i_pt][i_at] = i_at == 0 ? 1 : 2; // 1 for TOS, 2 for AOS
+            }
+        }
+    }
+
+    // // 打印基本计算结果
+    // printf("input_data_per_row = %d\n", input_data_per_row);
+    // printf("rows_per_input_channel = %d\n", rows_per_input_channel);
+    // printf("input_channels_per_ISload = %d\n", input_channels_per_ISload);
+    // printf("IS_load_times_per_inst = %d\n", IS_load_times_per_inst);
+
+    // // 打印IS_load_rows数组
+    // printf("IS_load_rows:\n");
+    // for (int i = 0; i < IS_load_times_per_inst; ++i) {
+    //     printf("%d ", IS_load_rows[i]);
+    // }
+    // printf("\n");
+
+    // // 打印权重更新信息
+    // printf("weight_block_row = %d\n", weight_block_row);
+    // printf("weight_block_col = %d\n", weight_block_col);
+    // printf("weight_block_num = %d\n", weight_block_num);
+    // printf("weight_update_times_per_inst = %d\n", weight_update_times_per_inst);
+
+    // // 打印weight_update_ls数组
+    // printf("weight_update_ls:\n");
+    // for (int i = 0; i < weight_update_times_per_inst; ++i) {
+    //     printf("%d ", weight_update_ls[i]);
+    // }
+    // printf("\n");
+
+    // // 打印ls_matrix
+    // printf("ls_matrix:\n");
+    // for (int i = 0; i < para_times; ++i) {
+    //     for (int j = 0; j < acc_times; ++j) {
+    //         printf("%d ", ls_matrix[i][j]);
+    //     }
+    //     printf("\n");
+    // }
+
+    // // 打印atos_matrix
+    // printf("atos_matrix:\n");
+    // for (int i = 0; i < para_times; ++i) {
+    //     for (int j = 0; j < acc_times; ++j) {
+    //         printf("%d ", atos_matrix[i][j]);
+    //     }
+    //     printf("\n");
+    // }
+
+
+    gt_in_map_record = 0;
+    os_virtual_depth = arch.OS_DEPTH;
+
+    if (strcmp(data_stream, "ispp") == 0 || strcmp(data_stream, "isap") == 0){
+        is_process();
+    }
+    else
+        ws_process();
+
+}
+
+void ph2_process(void){
+    strcpy(data_stream, "wspp");
+    for(int i=0; i<dim3; i++){
+        proj_process(dim1,dim2/dim3,dim1);
+        proj_process(dim2/dim3,dim1,dim1);
+    }//    e.g.    "a2a", N, 768, 12
+}
+
+void lhd_process(void){
+    int K_map_channel = dim1;
+    int K_map_length = dim2 / dim3;
+    int K_para_times = ceil((float)K_map_channel / arch.PC);
+    int K_acc_times = ceil((float)K_map_length / arch.AL);
+    int K_map_block = K_para_times * K_acc_times;
+    int Sqk = K_map_block;
+
+    int V_map_channel = dim2 / dim3;
+    int V_map_length = dim1;
+    int V_para_times = ceil((float)V_map_channel / arch.PC);
+    int V_acc_times = ceil((float)V_map_length / arch.AL);
+    int V_map_block = V_para_times * V_acc_times;
+    int Spv = V_map_block;
+
+    int using_scr = K_map_block + V_map_block;
+
+    if (using_scr > arch.SCR){
+        printf("ERROR\n");
+        return;
+    }
+
+    int Q_serial_times = ceil((float)(Sqk + arch.PIPELINE_STAGES) / Sqk);
+
+    // printf("K_map_channel: %d\n", K_map_channel);
+    // printf("K_map_length: %d\n", K_map_length);
+    // printf("K_para_times: %d\n", K_para_times);
+    // printf("K_acc_times: %d\n", K_acc_times);
+    // printf("K_map_block: %d\n", K_map_block);
+    // printf("Sqk: %d\n", Sqk);
+
+    // printf("V_map_channel: %d\n", V_map_channel);
+    // printf("V_map_length: %d\n", V_map_length);
+    // printf("V_para_times: %d\n", V_para_times);
+    // printf("V_acc_times: %d\n", V_acc_times);
+    // printf("V_map_block: %d\n", V_map_block);
+    // printf("Spv: %d\n", Spv);
+
+    // printf("using_scr: %d\n", using_scr);
+    // printf("Q_serial_times: %d\n", Q_serial_times);
+
+    // we are using wspp here
+    weight_block_row = using_scr;
+    para_times = using_scr;
+    acc_times = 1;
+
+    input_channels_per_ISload = 0;
+    IS_load_times_per_inst = 0;
+
+    // 分配ls_matrix
+    int ls_fg = 0;
+    ls_matrix = (int**)malloc(para_times * sizeof(int*));
+    for(int i = 0; i < para_times; ++i) {
+        ls_matrix[i] = (int*)malloc(acc_times * sizeof(int));
+        for(int j = 0; j < acc_times; ++j) {
+            ls_matrix[i][j] = ls_fg;
+            ls_fg++;
+        }
+    }
+
+    // 分配atos_matrix
+    atos_matrix = (int**)malloc(para_times * sizeof(int*));
+    for(int i = 0; i < para_times; ++i) {
+        atos_matrix[i] = (int*)malloc(acc_times * sizeof(int));
+        for(int j = 0; j < acc_times; ++j) {
+            atos_matrix[i][j] = 0;
+        }
+    }
+
+    int i_block = 0;
+    for(int i = 0; i < K_para_times; i++){
+        for (int j = 0; j < K_acc_times; j++){
+            if (j == K_acc_times - 1)
+                atos_matrix[i_block][0] = 1;
+            else 
+                atos_matrix[i_block][0] = 0;
+            i_block+=1;
+        }
+    }
+
+    for(int i = 0; i < V_para_times; i++){
+        for (int j = 0; j < V_acc_times; j++){
+            if (j == V_acc_times - 1)
+                atos_matrix[i_block][0] = 1;
+            else 
+                atos_matrix[i_block][0] = 0;
+            i_block+=1;
+        }
+    }
+
+    // // 打印 ls_matrix
+    // printf("ls_matrix:\n");
+    // for(int i = 0; i < para_times; ++i) {
+    //     for(int j = 0; j < acc_times; ++j) {
+    //         printf("%d ", ls_matrix[i][j]);
+    //     }
+    //     printf("\n");
+    // }
+
+    // // 打印 atos_matrix
+    // printf("atos_matrix:\n");
+    // for(int i = 0; i < para_times; ++i) {
+    //     for(int j = 0; j < acc_times; ++j) {
+    //         printf("%d ", atos_matrix[i][j]);
+    //     }
+    //     printf("\n");
+    // }
+
+    for(int i_head=0; i_head<dim3; i_head++){
+        // 我们不用更新IS，which is great
+        // 首先更新K和V矩阵到CIM中
+        strcpy(data_stream, "wspp");//新增的
+        wu_ls_bank(para_times, arch.PC, 0);
+        for (int i = 0; i < arch.WUW / arch.BUS_WIDTH * arch.WEIGHT_ROW; i++) {
+            idle();
+        }
+        for (int j = 0; j < ceil((float)dim1 / Q_serial_times); j++){
+            int current_serial_times = Q_serial_times;
+            if (j == ceil((float)dim1 / Q_serial_times) - 1) 
+                current_serial_times = min(dim1 - j * Q_serial_times, Q_serial_times);
+
+            strcpy(data_stream, "wspp");
+            for (int k = 0; k < current_serial_times; k++){
+                for(int m_count=0; m_count<Sqk; m_count++){
+                    compute(j * Q_serial_times + k, m_count, 0);
+                    //compute(int i_input_channel, int computing_block,int fussion_flag = 0)
+                }
+            }
+            strcpy(data_stream, "wspp");
+            for (int k = 0; k < current_serial_times; k++){
+                for(int m_count=0; m_count<Spv; m_count++){
+                    compute(k, m_count + Sqk, 1);
+                    //compute(int fussion_count, int computing_block,int fussion_flag = 0)
+                }
+            }
+        }
+
+    }
+}
+
+void a2a_process(void){
+    if (strcmp(data_stream, "ph2") == 0){
+        ph2_process();
+    }
+    else if (strcmp(data_stream, "lhd") == 0)
+        lhd_process();
+}
+
