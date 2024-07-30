@@ -80,39 +80,39 @@ int main(int argc, char *argv[]) {
     }
 
     // Parsing command line arguments
-    int AL = atoi(argv[1]);
-    int PC = atoi(argv[2]);
-    int SCR = atoi(argv[3]);
-    int ICW = atoi(argv[4]);
-    int WUW = atoi(argv[5]);
+    AL = atoi(argv[1]);
+    PC = atoi(argv[2]);
+    SCR = atoi(argv[3]);
+    ICW = atoi(argv[4]);
+    WUW = atoi(argv[5]);
 
-    int MACRO_ROW = atoi(argv[6]);
-    int MACRO_COL = atoi(argv[7]);
-    int IS_DEPTH = atoi(argv[8]);
-    int OS_DEPTH = atoi(argv[9]);
-    int FREQ = atoi(argv[10]);
-    int BUS_WIDTH = atoi(argv[11]);
-    int PIPELINE_STAGES = atoi(argv[12]);
+    MACRO_ROW = atoi(argv[6]);
+    MACRO_COL = atoi(argv[7]);
+    IS_DEPTH = atoi(argv[8]);
+    OS_DEPTH = atoi(argv[9]);
+    FREQ = atoi(argv[10]);
+    BUS_WIDTH = atoi(argv[11]);
+    PIPELINE_STAGES = atoi(argv[12]);
 
-    int DIRECTION = atoi(argv[13]);
-    int DATA_TYPE = atoi(argv[14]);
-    int WEIGHT_WIDTH = atoi(argv[15]);
-    int WEIGHT_ROW = atoi(argv[16]);
-    int WEIGHT_COL = atoi(argv[17]);
-    int INPUT_WIDTH = atoi(argv[18]);
-    int RESULT_WIDTH = atoi(argv[19]);
+    DIRECTION = atoi(argv[13]);
+    DATA_TYPE = atoi(argv[14]);
+    WEIGHT_WIDTH = atoi(argv[15]);
+    WEIGHT_ROW = atoi(argv[16]);
+    WEIGHT_COL = atoi(argv[17]);
+    INPUT_WIDTH = atoi(argv[18]);
+    RESULT_WIDTH = atoi(argv[19]);
 
-    char* operation = argv[20];
-    int dim1 = atoi(argv[21]);
-    int dim2 = atoi(argv[22]);
-    int dim3 = atoi(argv[23]);
-    char* data_stream = argv[24];
+    operation = argv[20];
+    dim1 = atoi(argv[21]);
+    dim2 = atoi(argv[22]);
+    dim3 = atoi(argv[23]);
+    data_stream = argv[24];
 
     // Call initialization functions
-    Init_CIM_Macro(&macro, AL, PC, SCR, ICW, WUW, DIRECTION, DATA_TYPE, WEIGHT_WIDTH, WEIGHT_ROW, WEIGHT_COL, INPUT_WIDTH, RESULT_WIDTH);
+    Init_CIM_Macro(&macro, AL, PC, SCR, ICW, WUW, WEIGHT_COL, INPUT_WIDTH, RESULT_WIDTH, DIRECTION, DATA_TYPE, WEIGHT_WIDTH, WEIGHT_ROW);
     Init_Micro_Arch(&arch, &macro, MACRO_ROW, MACRO_COL, IS_DEPTH, OS_DEPTH, FREQ, BUS_WIDTH, PIPELINE_STAGES);
-    // Print_CIM_Macro(&macro);
-    // Print_Micro_Arch(&arch);
+    Print_CIM_Macro(&macro);
+    Print_Micro_Arch(&arch);
 
     //***************************************** main process ****************************************
     if (strcmp(operation, "proj") == 0)
@@ -548,9 +548,10 @@ void proj_process(int a, int b, int c){ //实际上的输入参数是input和wei
     input_map_length = b;
     input_map_channel = c;
 
-    input_data_per_row = floor(arch.IS_WIDTH / arch.INPUT_WIDTH);
+    input_data_per_row = (int)floor((float)arch.IS_WIDTH / arch.INPUT_WIDTH);
     rows_per_input_channel = (int)ceil((float)input_map_length / input_data_per_row);
-    input_channels_per_ISload = arch.IS_DEPTH / rows_per_input_channel;
+    input_channels_per_ISload = (int)floor((float)arch.IS_DEPTH / rows_per_input_channel);
+
     if (input_channels_per_ISload > input_map_channel)
         input_channels_per_ISload = input_map_channel;
     if (input_channels_per_ISload == 0)
@@ -565,7 +566,6 @@ void proj_process(int a, int b, int c){ //实际上的输入参数是input和wei
             IS_load_rows[IS_load_times_per_inst - 1] = (input_map_channel % input_channels_per_ISload) * rows_per_input_channel;
         }
     }
-
     // IS_load_rows = (int*)malloc(IS_load_times_per_inst * sizeof(int));
     // for (int i = 0; i < IS_load_times_per_inst; ++i) {
     //     IS_load_rows[i] = input_channels_per_ISload * rows_per_input_channel;
@@ -578,7 +578,6 @@ void proj_process(int a, int b, int c){ //实际上的输入参数是input和wei
     weight_block_col = (int)ceil((float)weight_map_length / arch.AL);
     weight_block_num = weight_block_col * weight_block_row;
     weight_update_times_per_inst = (int)ceil((float)weight_block_num / arch.SCR);
-
     weight_update_ls = (int*)malloc(weight_update_times_per_inst * sizeof(int));
     for (int i = 0; i < weight_update_times_per_inst; ++i) {
         weight_update_ls[i] = arch.SCR;
@@ -613,7 +612,6 @@ void proj_process(int a, int b, int c){ //实际上的输入参数是input和wei
             atos_matrix[i][j] = 0;
         }
     }
-
     int ls_fg = 0;
 
     if (strcmp(data_stream, "isap") == 0 || strcmp(data_stream, "wsap") == 0) {

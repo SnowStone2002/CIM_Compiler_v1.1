@@ -32,15 +32,16 @@ void Init_Micro_Arch(Micro_Arch *arch, CIM_Macro *macro, int MACRO_ROW, int MACR
     arch->WEIGHT_ROW = macro->WEIGHT_ROW;
     arch->WEIGHT_COL = macro->WEIGHT_COL;
     arch->INPUT_WIDTH = macro->INPUT_WIDTH;
-    arch->RESULT_WIDTH = (macro->RESULT_WIDTH+(int)(log2(arch->MACRO_COL)))*arch->PC;;
+    arch->RESULT_WIDTH = macro->RESULT_WIDTH;
     if (macro->DIRECTION == 0){
-        arch->CIM_WIDTH = macro->WEIGHT_COL * arch->AL;
+        // arch->CIM_WIDTH = macro->WEIGHT_COL * arch->AL;
         arch->CIM_DEPTH = macro->WEIGHT_ROW * macro->SCR * arch->PC;
     }
     else {
-        arch->CIM_DEPTH = macro->WEIGHT_COL * arch->AL * macro->SCR;
+        // arch->CIM_DEPTH = macro->WEIGHT_COL * arch->AL * macro->SCR;
         arch->CIM_WIDTH = macro->WEIGHT_ROW * arch->PC;
     }
+    arch->CIM_WIDTH = arch->WUW;
     arch->CIM_SIZE = arch->CIM_WIDTH * arch->CIM_DEPTH;
 
     // 初始化 Cache

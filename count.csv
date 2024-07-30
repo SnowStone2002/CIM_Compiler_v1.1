@@ -1,0 +1,8 @@
+al,pc,scr,icw,wuw,macro_row,macro_col,is_depth,os_depth,freq,bus_width,pipeline_stages,operation,dim1,dim2,dim3,data_stream,
+Lin,Linp,Lwt,Lwtp,Cmpfis_aor,Cmpfis_tos,Cmpfis_aos,Cmpfis_ptos,Cmpfis_paos,Cmpfgt_aor,Cmpfgt_tos,Cmpfgt_aos,Cmpfgt_ptos,Cmpfgt_paos,Cmpfgtp,Lpenalty,Nop,Nop_w_rd,IS_reward,L2_reward,Fussion
+64,64,16,512,128,1,1,1024,1024,500,128,8,proj,55,768,64,isap
+768,2304,3072,0,704,0,0,64,0,0,0,0,0,0,0,0,4,0,0,0,0
+64,64,16,512,128,1,1,1024,1024,500,128,8,proj,55,768,64,isap
+768,2304,3072,0,704,0,0,64,0,0,0,0,0,0,0,0,4,0,0,0,0
+64,64,16,512,128,1,1,1024,1024,500,128,8,proj,55,768,64,isap
+768,2304,3072,0,704,0,0,64,0,0,0,0,0,0,0,0,4,0,0,0,0
