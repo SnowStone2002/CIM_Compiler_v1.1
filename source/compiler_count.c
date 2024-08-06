@@ -111,8 +111,8 @@ int main(int argc, char *argv[]) {
     // Call initialization functions
     Init_CIM_Macro(&macro, AL, PC, SCR, ICW, WUW, WEIGHT_COL, INPUT_WIDTH, RESULT_WIDTH, DIRECTION, DATA_TYPE, WEIGHT_WIDTH, WEIGHT_ROW);
     Init_Micro_Arch(&arch, &macro, MACRO_ROW, MACRO_COL, IS_DEPTH, OS_DEPTH, FREQ, BUS_WIDTH, PIPELINE_STAGES);
-    Print_CIM_Macro(&macro);
-    Print_Micro_Arch(&arch);
+    // Print_CIM_Macro(&macro);
+    // Print_Micro_Arch(&arch);
 
     //***************************************** main process ****************************************
     if (strcmp(operation, "proj") == 0)
