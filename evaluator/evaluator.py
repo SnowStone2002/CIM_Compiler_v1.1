@@ -4,37 +4,6 @@ import numpy as np
 from power_modeling import power_modeling
 from area_modeling import area_modeling
 
-
-# # 初始化 CIMMacro 对象
-# macro = cfg.CIMMacro(
-#     AL=128,
-#     PC=8,
-#     SCR=8,
-#     ICW=16,  # 这个值你可以根据需要调整
-#     WUW=32,  # 这个值你可以根据需要调整
-#     WEIGHT_COL=2,
-#     INPUT_WIDTH=8,  # 这个值你可以根据需要调整
-#     RESULT_WIDTH=32,
-#     DIRECTION=0,  # 这个值你可以根据需要调整
-#     DATA_TYPE=1,  # 这个值你可以根据需要调整
-#     WEIGHT_WIDTH=8,  # 这个值你可以根据需要调整
-#     WEIGHT_ROW=4
-# )
-
-# # 初始化 MicroArch 对象
-# acc0 = cfg.MicroArch(
-#     macro=macro,
-#     MACRO_ROW=8,
-#     MACRO_COL=16,
-#     IS_DEPTH=1024,
-#     OS_DEPTH=2048,
-#     FREQ=500,
-#     BUS_WIDTH=256,
-#     PIPELINE_STAGES=4  # 这个值你可以根据需要调整
-# )
-
-# gli = ("mvm",(64,1024,1024))
-
 def evaluate(acc0, gli, dataflow, bit_energy_L2 = 2):
    types = [
            "Lin", # 0
@@ -64,11 +33,11 @@ def evaluate(acc0, gli, dataflow, bit_energy_L2 = 2):
 
    cmd = (
     "./build/compiler_count.exe "
-    + str(acc0.AL) + " "
-    + str(acc0.PC) + " "
+    + str(acc0.AL/acc0.MACRO_COL) + " "
+    + str(acc0.PC/acc0.MACRO_ROW) + " "
     + str(acc0.SCR) + " "
-    + str(acc0.ICW) + " "
-    + str(acc0.WUW) + " "
+    + str(acc0.ICW/acc0.MACRO_COL) + " "
+    + str(acc0.WUW/acc0.MACRO_COL) + " "
     + str(acc0.MACRO_ROW) + " "
     + str(acc0.MACRO_COL) + " "
     + str(acc0.IS_DEPTH) + " "
@@ -137,6 +106,8 @@ def evaluate(acc0, gli, dataflow, bit_energy_L2 = 2):
       metrics['ee_L2'] = metrics['op'] / (metrics['energy'][18,7] + energy_L2)
       metrics['EDP'] = (metrics['energy'][18,7] + energy_L2) * metrics['delay'] / 1e12 # Unit: nJs
       metrics['energy_on_L2'] = energy_L2
+      # print(metrics['ee_L2'])
+      # if metrics['ee_L2'] == 0.0: print(cmd)
       metrics['energy_L2'] = metrics['op']/metrics['ee_L2']
 
    else:
@@ -151,11 +122,11 @@ if __name__ == "__main__":
 
       # 初始化 CIMMacro 对象
    macro = cfg.CIMMacro(
-      AL=128,
+      AL=64,
       PC=8,
-      SCR=8,
-      ICW=16,  # 这个值你可以根据需要调整
-      WUW=32,  # 这个值你可以根据需要调整
+      SCR=16,
+      ICW=512,  # 这个值你可以根据需要调整
+      WUW=128,  # 这个值你可以根据需要调整
       WEIGHT_COL=2,
       INPUT_WIDTH=8,  # 这个值你可以根据需要调整
       RESULT_WIDTH=32,
@@ -168,33 +139,35 @@ if __name__ == "__main__":
    # 初始化 MicroArch 对象
    acc0 = cfg.MicroArch(
       macro=macro,
-      MACRO_ROW=8,
-      MACRO_COL=16,
+      MACRO_ROW=2,
+      MACRO_COL=2,
       IS_DEPTH=1024,
       OS_DEPTH=2048,
       FREQ=500,
       BUS_WIDTH=256,
-      PIPELINE_STAGES=4  # 这个值你可以根据需要调整
+      PIPELINE_STAGES=8  # 这个值你可以根据需要调整
    )
 
    gli = ("proj",(64,1024,1024))
 
-   for dataflow in ["isap","ispp","wsap","wspp"]:
+   for dataflow in ["wspp"]:#"isap","ispp","wsap",
       metrics = evaluate(acc0, gli, dataflow)
 
-      print(metrics['ee_L2'])
-      # print(metrics['delay'])
-      # print(metrics['read_bits_L2'])
-      # print(metrics['write_bits_L2'])
-   print(metrics['area'])
+      print(metrics)
 
-   mld = evaluate(acc0, ("a2a",(128,768,12)), 'lhd')
-   print(mld['ee_L2'])
-   print(mld['ee_L1'])
-   print(mld['write_bits_L2'])
-   print(mld['read_bits_L2'])
+   #    print(metrics['ee_L2'])
+   #    print(metrics['delay'])
+   #    print(metrics['read_bits_L2'])
+   #    print(metrics['write_bits_L2'])
+   # print(metrics['area'])
+   # print()
 
-
+   # mld = evaluate(acc0, ("a2a",(128,768,12)), 'lhd')
+   # print(mld)
+   # print(mld['ee_L2'])
+   # print(mld['ee_L1'])
+   # print(mld['write_bits_L2'])
+   # print(mld['read_bits_L2'])
 
 # check methods:
 # 1. same ops for dataflows

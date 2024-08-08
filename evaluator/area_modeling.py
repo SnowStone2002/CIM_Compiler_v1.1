@@ -35,7 +35,35 @@ if __name__ == "__main__":
     #                                scr = 16,
     #                                os_depth = 4
     #                                ))
-    acc0 = cfg.hwc(config = cfg.Config(bus_width = 256, is_depth = 1024, al = 128, pc = 32, scr = 32, os_depth = 1024))
+    # acc0 = cfg.hwc(config = cfg.Config(bus_width = 256, is_depth = 1024, al = 128, pc = 32, scr = 32, os_depth = 1024))
+
+    macro = cfg.CIMMacro(
+        AL=64,
+        PC=8,
+        SCR=32,
+        ICW=64*8,  # 这个值你可以根据需要调整
+        WUW=64*2,  # 这个值你可以根据需要调整
+        WEIGHT_COL=2,
+        INPUT_WIDTH=8,  # 这个值你可以根据需要调整
+        RESULT_WIDTH=32,
+        DIRECTION=0,  # 这个值你可以根据需要调整
+        DATA_TYPE=1,  # 这个值你可以根据需要调整
+        WEIGHT_WIDTH=8,  # 这个值你可以根据需要调整
+        WEIGHT_ROW=4
+    )
+
+    # 初始化 MicroArch 对象
+    acc0 = cfg.MicroArch(
+        macro=macro,
+        MACRO_ROW=4,
+        MACRO_COL=4,
+        IS_DEPTH=64,
+        OS_DEPTH=128,
+        FREQ=500,
+        BUS_WIDTH=2048,
+        PIPELINE_STAGES=8  # 这个值你可以根据需要调整
+    )
+
 
     for pri in area_modeling(acc0):
         print(pri)

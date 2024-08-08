@@ -6,11 +6,11 @@ import time
 from evaluator import evaluate
 
 bus_width_space = [128, 256, 512, 1024, 2048, 4096]
-is_depth_space = [64, 512, 1024]
-al_space = [64, 128, 256, 512]
-pc_space = [8, 16, 32, 64]
+is_depth_space = [32, 64, 128, 256, 512, 1024, 2048]
+al_space = [64, 128, 192, 256, 320, 384, 448, 512]
+pc_space = [8, 16, 24, 32, 40, 48, 56, 64]
 scr_space = [4, 8, 16, 32, 64]
-os_depth_space = [128, 1024, 4096]
+os_depth_space = [32, 64, 128, 256, 512, 1024, 2048]
 
 # 定义要保存文件的路径和文件名
 file_path = 'metrics_cycle.log'
@@ -28,12 +28,12 @@ file_path = 'metrics_cycle.log'
 
 
 # NN paras:
-# name = 'bert_large'
-name = 'vit_huge'
-seq_len = 197
-hidden_size = 1280
+name = 'bert_large'
+# name = 'vit_huge'
+seq_len = 512
+hidden_size = 1024
 head_num = 16
-num_layers = 32
+num_layers = 24
 
 # filename = "./dse_pks/"+name+"_N"+str(seq_len)+"_dse_strong_"
 filename = "./dse_pks/"+name+"_N"+str(seq_len)+"_dse_0415_"
@@ -91,6 +91,7 @@ for op_target in ['ee_L2','throughput']:
                                 #                                                 num_layers = num_layers, 
                                 #                                                 op_target = op_target
                                 #                                             )
+
                                 gli = ("a2a",(128,768,12))
 
                                 for dataflow in ['ph2']:

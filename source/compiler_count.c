@@ -281,6 +281,7 @@ void compute(int i_input_channel, int computing_block,int fussion_flag) {
 
     if ((strcmp(data_stream, "wsap") == 0 || strcmp(data_stream, "wspp") == 0) && (i_input_channel >= input_channels_per_ISload)) { // Cmpfgt & Cmpfgtp
     //  这里是bus wide的情况
+        // bus_is_width_ratio = arch.BUS_WIDTH / arch.IS_WIDTH;
         if (bus_is_width_ratio >= 1){
             input_map_position = i_input_channel * input_map_length + i_at * arch.AL;
             if(input_map_position / bus_is_width_ratio == input_map_position_record / bus_is_width_ratio && !fussion_flag) instructionCount.L2_reward++;
@@ -497,7 +498,7 @@ void is_process(void) {
             //i_block = 
             wu_ls_bank(weight_update_ls[j_weight_load], arch.PC, i_block);
 
-            for (int i = 0; i < arch.WUW / arch.BUS_WIDTH * arch.WEIGHT_ROW; i++) {
+            for (int i = 0; i < ceil((float)arch.WUW / arch.BUS_WIDTH) * arch.WEIGHT_ROW; i++) {
                 idle();
             }
 
@@ -526,7 +527,7 @@ void ws_process(void) {
     for (int i_weight_update = 0; i_weight_update < weight_update_times_per_inst; i_weight_update++) {
         wu_ls_bank(weight_update_ls[i_weight_update], arch.PC, i_block);
 
-        for (int i = 0; i < arch.WUW / arch.BUS_WIDTH * arch.WEIGHT_ROW; i++) {
+        for (int i = 0; i < ceil((float)arch.WUW / arch.BUS_WIDTH) * arch.WEIGHT_ROW; i++) {
             idle();
         }
 
@@ -825,7 +826,7 @@ void lhd_process(void){
         // 首先更新K和V矩阵到CIM中
         strcpy(data_stream, "wspp");//新增的
         wu_ls_bank(para_times, arch.PC, 0);
-        for (int i = 0; i < arch.WUW / arch.BUS_WIDTH * arch.WEIGHT_ROW; i++) {
+        for (int i = 0; i < ceil((float)arch.WUW / arch.BUS_WIDTH) * arch.WEIGHT_ROW; i++) {
             idle();
         }
         for (int j = 0; j < ceil((float)dim1 / Q_serial_times); j++){
@@ -837,6 +838,7 @@ void lhd_process(void){
             for (int k = 0; k < current_serial_times; k++){
                 for(int m_count=0; m_count<Sqk; m_count++){
                     compute(j * Q_serial_times + k, m_count, 0);
+                    // printf("%d, %d\n", j * Q_serial_times + k, m_count);
                     //compute(int i_input_channel, int computing_block,int fussion_flag = 0)
                 }
             }
